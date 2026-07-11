@@ -112,7 +112,7 @@ def generate_pdf(
 
         Paragraph(
 
-            "<b>DELHI TECHNOLOGICAL UNIVERSITY</b>",
+            "<b>DRDO</b>",
 
             title_style
 
