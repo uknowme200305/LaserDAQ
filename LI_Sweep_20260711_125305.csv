@@ -1,0 +1,27 @@
+LASER CHARACTERIZATION REPORT
+
+Date,2026-07-11
+Time,12:53:06
+
+CALCULATED LASER PARAMETERS
+Threshold Current (mA),34.082
+Slope Efficiency (mW/mA),0.728
+Forward Voltage (V),1.902
+Differential Resistance (Ohm),1.984
+Maximum Optical Power (mW),46.843
+Operating Current (mA),100.101
+
+
+RAW MEASUREMENT DATA
+Current (mA),Power (mW),Voltage (V),Temperature (°C)
+-0.064,0.028,1.702,25.013
+10.045,0.0,1.722,25.042
+20.045,0.0,1.738,25.084
+30.135,0.0,1.761,25.163
+39.905,3.893,1.779,25.232
+50.014,11.64,1.8,25.33
+59.906,19.147,1.822,25.445
+69.98,26.411,1.838,25.565
+80.14,33.629,1.863,25.675
+89.917,40.31,1.877,25.792
+100.101,46.843,1.902,25.923
