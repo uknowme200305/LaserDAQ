@@ -166,6 +166,18 @@ python main_V1B.py
 - Executable Release
 - Laboratory Validation
 
+### Version 1.1
+
+- Complete Version 1 hardware architecture
+
+- Added startup mode selection
+- Implemented dynamic hardware device scanner
+- Added SF6100, TEC3700 and Maestro auto-detection
+- Refactored DeviceFactory for dynamic COM ports
+- Added CSV/PDF export
+- Added TEC stability handling
+- Moved hardware scan to Scan Devices button
+
 ---
 
 ## License
