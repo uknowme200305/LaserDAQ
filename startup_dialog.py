@@ -14,7 +14,8 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QRadioButton,
-    QGroupBox
+    QGroupBox,
+    QSizePolicy
 )
 
 from PyQt5.QtCore import Qt
@@ -28,7 +29,9 @@ class StartupDialog(QDialog):
 
         self.setWindowTitle("LaserDAQ")
 
-        self.setFixedSize(400, 260)
+        # Larger window
+        self.resize(450, 260)
+        self.setMinimumSize(420, 240)
 
         self.mode = "simulation"
 
@@ -38,9 +41,12 @@ class StartupDialog(QDialog):
 
         layout = QVBoxLayout()
 
-        # --------------------------
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
+
+        # --------------------------------
         # Title
-        # --------------------------
+        # --------------------------------
 
         title = QLabel("LaserDAQ")
 
@@ -57,17 +63,22 @@ class StartupDialog(QDialog):
 
         subtitle.setAlignment(Qt.AlignCenter)
 
+        subtitle.setStyleSheet("""
+            font-size:11pt;
+        """)
+
         layout.addWidget(subtitle)
 
-        layout.addSpacing(15)
-
-        # --------------------------
-        # Mode Selection
-        # --------------------------
+        # --------------------------------
+        # Operating Mode
+        # --------------------------------
 
         group = QGroupBox("Operating Mode")
 
         group_layout = QVBoxLayout()
+
+        group_layout.setContentsMargins(12, 12, 12, 12)
+        group_layout.setSpacing(10)
 
         self.simRadio = QRadioButton("Simulation Mode")
 
@@ -75,35 +86,43 @@ class StartupDialog(QDialog):
 
         self.simRadio.setChecked(True)
 
-        group_layout.addWidget(self.simRadio)
+        self.simRadio.setMinimumHeight(28)
+        self.hwRadio.setMinimumHeight(28)
 
+        group_layout.addWidget(self.simRadio)
         group_layout.addWidget(self.hwRadio)
 
         group.setLayout(group_layout)
+
+        group.setSizePolicy(
+            QSizePolicy.Expanding,
+            QSizePolicy.Fixed
+        )
 
         layout.addWidget(group)
 
         layout.addStretch()
 
-        # --------------------------
+        # --------------------------------
         # Buttons
-        # --------------------------
+        # --------------------------------
 
         button_layout = QHBoxLayout()
 
-        start_button = QPushButton("Start")
-
-        cancel_button = QPushButton("Exit")
-
-        start_button.clicked.connect(self.start)
-
-        cancel_button.clicked.connect(self.reject)
-
         button_layout.addStretch()
 
-        button_layout.addWidget(start_button)
+        start_button = QPushButton("Start")
+        exit_button = QPushButton("Exit")
 
-        button_layout.addWidget(cancel_button)
+        start_button.setMinimumSize(120, 36)
+        exit_button.setMinimumSize(120, 36)
+
+        start_button.clicked.connect(self.start)
+        exit_button.clicked.connect(self.reject)
+
+        button_layout.addWidget(start_button)
+        button_layout.addSpacing(10)
+        button_layout.addWidget(exit_button)
 
         layout.addLayout(button_layout)
 
