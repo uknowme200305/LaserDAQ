@@ -6,6 +6,9 @@ class TEC3700Simulator:
     def __init__(self, laser=None):
         self.laser = laser
         self.connected = False
+        # TEC Dynamics
+
+        self.tec_response = 0.18
 
         # Device Information
         self.device_name = "Newport TEC3700 Simulator"
@@ -189,7 +192,7 @@ class TEC3700Simulator:
             )
 
             self.temperature += (
-                error * 0.18
+                error * self.tec_response
             )
 
         else:

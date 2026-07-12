@@ -59,6 +59,23 @@ class SF6100:
         command = f"J{parameter}"
 
         return self.send_raw(command)
+    
+        # ==================================================
+        # Device Identification
+        # ==================================================
+
+        def identify(self):
+            """
+            Returns the Device Model / Version ID.
+            Used by the hardware scanner.
+            """
+            return self.get_parameter("0702")
+
+        def get_serial_number(self):
+            """
+            Returns the device serial number.
+            """
+            return self.get_parameter("0701")
 
 
     def set_parameter(self, parameter, value):

@@ -29,8 +29,10 @@ from PyQt5.QtWidgets import QFileDialog
 
 class MainWindow(QMainWindow):
 
-    def __init__(self):
+    def __init__(self, mode="simulation"):
         super().__init__()
+
+        self.mode = mode
 
         self.laser_results = {
             "threshold_current": 0.0,
@@ -209,27 +211,36 @@ class MainWindow(QMainWindow):
             self.stop_sweep
         )
 
+        # ---------------------------------
+        # Startup Information
+        # ---------------------------------
+
+        self.log("=" * 50)
+        self.log("LaserDAQ Started")
+        self.log(f"Mode : {self.mode.capitalize()}")
         self.log("Laser Characterization Software Started")
+        self.log("=" * 50)
 
         # --------------------------------
         # Create Simulated Devices
         # --------------------------------
 
-        factory = DeviceFactory()
+        self.scanner = DeviceScanner(
+            mode=self.mode
+        )
+
+        self.detected_devices = {}
+
+        factory = DeviceFactory(
+            mode=self.mode,
+            detected_devices=self.detected_devices
+        )
 
         self.sf6100 = factory.sf6100
-
         self.maestro = factory.maestro
-
         self.tec = factory.tec
-
         self.avantes = factory.avantes
-
-        self.scanner = DeviceScanner()
-        
-        self.tec.set_temperature(DEFAULT_TEMPERATURE)
-
-        
+                
 
         # ==========================================
         # Connection Buttons
@@ -264,6 +275,34 @@ class MainWindow(QMainWindow):
         #disconnecting avantes and beamage for now since they are not implemented yet
         
         self.pushButton_6.setEnabled(False)
+
+        # ---------------------------------
+        # TEC Controls
+        # ---------------------------------
+
+        self.tecTempInput.setText(str(DEFAULT_TEMPERATURE))
+
+        self.setTempButton.clicked.connect(
+            self.set_tec_temperature
+        )
+
+        self.tecTimer = QTimer()
+
+        self.tecTimer.timeout.connect(
+            self.update_tec_temperature
+        )
+
+        self.tecTimer.start(500)
+
+        # ---------------------------------
+        # TEC State
+        # ---------------------------------
+
+        self.target_temperature = DEFAULT_TEMPERATURE
+
+        self.tec_stable = False
+
+        self.temperature_tolerance = 0.20
 
     # ==========================================
     # EXPORT PLOTS
@@ -348,7 +387,7 @@ class MainWindow(QMainWindow):
 
             "vi_curve.png",
 
-            simulation_mode=SIMULATION_MODE,
+            simulation_mode=(self.mode == "simulation"),
 
             connected_devices=connected_devices
 
@@ -362,12 +401,23 @@ class MainWindow(QMainWindow):
     def scan_devices(self):
 
         devices = self.scanner.scan_devices()
+        self.detected_devices = devices
+
+        factory = DeviceFactory(
+            mode=self.mode,
+            detected_devices=self.detected_devices
+        )
+
+        self.sf6100 = factory.sf6100
+        self.maestro = factory.maestro
+        self.tec = factory.tec
+        self.avantes = factory.avantes
 
         # ------------------------------
         # SF6100
         # ------------------------------
 
-        if devices["SF6100"]:
+        if devices["SF6100"]["available"]:
 
             self.sf6100Status.setText(
                 "🟡 Available"
@@ -377,13 +427,15 @@ class MainWindow(QMainWindow):
                 "color: orange; font-weight:bold;"
             )
 
-            self.log("SF6100 Found")
+            self.log(
+                f"SF6100 Found ({devices['SF6100']['port']})"
+            )
 
         # ------------------------------
         # Maestro
         # ------------------------------
 
-        if devices["Maestro"]:
+        if devices["Maestro"]["available"]:
 
             self.maestroStatus.setText(
                 "🟡 Available"
@@ -398,7 +450,7 @@ class MainWindow(QMainWindow):
         # ------------------------------
         # AVANTES
         # ------------------------------
-        if devices["Avantes"]:
+        if devices["Avantes"]["available"]:
 
             self.avantesStatus.setText(
                 "🟡 Available"
@@ -416,7 +468,7 @@ class MainWindow(QMainWindow):
         # TEC
         # ------------------------------
 
-        if devices["TEC3700"]:
+        if devices["TEC3700"]["available"]:
 
             self.newportStatus.setText(
                 "🟡 Available"
@@ -567,6 +619,7 @@ class MainWindow(QMainWindow):
             self.tec.connect()
 
             self.tec.enable_output()
+            
 
             self.newportStatus.setText(
                 "🟢 Connected"
@@ -581,6 +634,14 @@ class MainWindow(QMainWindow):
             )
 
             self.log("TEC3700 Connected")
+
+            self.target_temperature = DEFAULT_TEMPERATURE
+
+            self.tec_stable = False
+
+            self.tec.set_temperature(DEFAULT_TEMPERATURE)
+
+            self.log("TEC Stabilizing...")
 
         except Exception as e:
 
@@ -821,6 +882,11 @@ class MainWindow(QMainWindow):
             self.log("ERROR : TEC3700 not connected.")
 
             return
+        if not self.tec_stable:
+
+            self.log("TEC not stable. Wait before starting sweep.")
+
+            return
         try:
 
             self.start_current = float(
@@ -909,6 +975,69 @@ class MainWindow(QMainWindow):
         self.fwhmDisplayLabel.setText(
             f"FWHM : {fwhm:.2f} nm"
         )
+
+    # ==========================================
+    # SET TEC TEMPERATURE
+    # ==========================================
+
+    def set_tec_temperature(self):
+
+        try:
+
+            temperature = float(
+                self.tecTempInput.text()
+            )
+
+        except ValueError:
+
+            self.log("Invalid Temperature")
+
+            return
+
+        if temperature < 10 or temperature > 60:
+
+            self.log("Temperature must be between 10°C and 60°C")
+
+            return
+
+        self.target_temperature = temperature
+
+        self.tec_stable = False
+
+        self.tec.set_temperature(temperature)
+
+        self.log(f"TEC Setpoint Changed to {temperature:.1f} °C")
+
+        self.log("TEC Stabilizing...")
+    # ==========================================
+    # UPDATE TEC DISPLAY
+    # ==========================================
+
+    def update_tec_temperature(self):
+
+        if not self.tec.is_connected():
+
+            self.tecTempLabel.setText("--")
+
+            return
+
+        temperature = self.tec.read_temperature()
+
+        self.tecTempLabel.setText(
+            f"{temperature:.2f} °C"
+        )
+
+        if (
+            not self.tec_stable
+            and abs(
+                temperature -
+                self.target_temperature
+            ) <= self.temperature_tolerance
+        ):
+
+            self.tec_stable = True
+
+            self.log("TEC Stable")
     # ====================================
     # TAKE MEASUREMENT
     # ====================================
@@ -1045,10 +1174,12 @@ class MainWindow(QMainWindow):
 # MAIN
 # ========================================
 
-app = QApplication(sys.argv)
+if __name__ == "__main__":
 
-window = MainWindow()
+    app = QApplication(sys.argv)
 
-window.show()
+    window = MainWindow()
 
-sys.exit(app.exec_())
+    window.show()
+
+    sys.exit(app.exec_())
