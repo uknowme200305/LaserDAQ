@@ -1,3 +1,4 @@
+import os
 import sys
 import random
 from datetime import datetime
@@ -26,6 +27,8 @@ import csv
 from datetime import datetime
 from PyQt5.QtWidgets import QFileDialog
 
+from utils.resource_path import resource_path
+
 
 class MainWindow(QMainWindow):
 
@@ -44,7 +47,7 @@ class MainWindow(QMainWindow):
         }
 
         # Load UI
-        uic.loadUi("laser_characterization_V1.ui", self)
+        uic.loadUi(resource_path("laser_characterization_V1.ui"),self)
 
         # ==========================================
         # Initial Connection Status
@@ -303,7 +306,7 @@ class MainWindow(QMainWindow):
         self.tec_stable = False
 
         self.temperature_tolerance = 0.20
-
+    
     # ==========================================
     # EXPORT PLOTS
     # ==========================================
