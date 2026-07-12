@@ -1,6 +1,6 @@
-PyQt5>=5.15.11
-pyqtgraph>=0.14.0
-numpy>=2.0.0
-pyserial>=3.5
-reportlab>=5.0.0
-matplotlib>=3.11.0
+PyQt5==5.15.11
+pyqtgraph==0.14.0
+pyserial==3.5
+numpy==2.4.6
+Pillow==12.3.0
+reportlab==5.0.0

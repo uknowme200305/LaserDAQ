@@ -26,6 +26,6 @@ call venv\Scripts\activate
 
 :: Start LaserDAQ
 
-python main_V1B.py
+python laserdaq.py
 
 pause
